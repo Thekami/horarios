@@ -31,9 +31,10 @@ for ($j=0; $j < count($grupo); $j++) {
 				if ($grupo[$j]["v"] == "" && $grupo[$h]["v"] != "")
 					$grupo[$j]["v"] = $grupo[$h]["v"]; $bandera = true;
 
+				if ($bandera)
+					array_splice($grupo, $h, 1);
 			}
-			if ($bandera)
-				array_splice($grupo, $h, 1);
+			
 		 } 
 	}
 echo "<pre>";

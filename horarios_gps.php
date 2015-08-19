@@ -137,13 +137,14 @@ for ($i=0; $i < count($csv); $i++) {  //recorro el array con el contenido del cs
 				if ($grupo[$j]["v"] == "" && $grupo[$h]["v"] != "")
 					$grupo[$j]["v"] = $grupo[$h]["v"]; $bandera = true;
 
+				if ($bandera)
+					array_splice($grupo, $h, 1);
 			}
-			/*if ($bandera)
-				array_splice($grupo, $h, $h);*/
 
 		 } 
 	}
 
+	//$grupo = array($grupo[0]["grupo"] => "$grupo");
 	// agrego al array final el contenido del grupo creado en el ciclo while
 	array_push($csv_organizado, $grupo); 
 
@@ -155,14 +156,31 @@ for ($i=0; $i < count($csv); $i++) {  //recorro el array con el contenido del cs
 } // fin for
 
 
+//array con el nombre de los grupos
+$nombres_gps = array();
+
+for ($i=0; $i <count($csv_organizado); $i++) { 
+	array_push($nombres_gps, $csv_organizado[$i][0]["grupo"]);
+}
+
+// variable con los options del select
+$opts = "";
+
+for ($i=0; $i < count($nombres_gps); $i++) { 
+	$opts = $opts.'<option value="'.$i.'">'.$nombres_gps[$i].'</option>';
+}
+
 // imprimo el array final, ya organizado
-echo "<pre>";
-var_dump($csv_organizado);
-echo "<pre>";
+/*echo "<pre>";
+var_dump($nombres_gps);
+echo "<pre>";*/
 
 // defino la tabla de que grupo mostraré
 $grupo = 0;
 
+if(isset($_POST["gp"]))
+	$grupo = $_POST["gp"];
+	//echo $_POST["gp"];
 ?>
 
 <!DOCTYPE html>
@@ -182,65 +200,104 @@ $grupo = 0;
     }
 </style>
 <body>
-    <h3><?php echo $csv_organizado[$grupo][0]["grupo"]; ?></h3><br>
+
 	
-	<table>
-		<thead>
-			<tr>
-				<th></th>
-				<th>Lunes</th>
-				<th>Martes</th>
-				<th>Miercoles</th>
-				<th>Jueves</th>
-				<th>Viernes</th>
-			</tr>
-		</thead>
-		<tbody>
-			
-			<?php 
+    <h3><?php echo $csv_organizado[$grupo][0]["grupo"]; ?></h3>
+	
+	<form action="horarios_gps.php" method="post">
+		<select name="gp" id="">
+	    	<?php echo $opts; ?>
+	    </select>
+	    <input type="submit" value="ver">
+	</form>
+    
+	<form action="resources/imprimir.php" method="post">
+		<input type="text" name="html" id="txt_html"  style="display: none">
+		<input type="submit" value="Imprimir" id="btnPrint">
+	</form>
+	
+	<div id="container">
+		<table syle="border-collapse: collapse; border: 1px solid black;">
+			<thead>
+				<tr>
+					<th style="border: 1px solid black;"></th>
+					<th style="border: 1px solid black;">Lunes</th>
+					<th style="border: 1px solid black;">Martes</th>
+					<th style="border: 1px solid black;">Miercoles</th>
+					<th style="border: 1px solid black;">Jueves</th>
+					<th style="border: 1px solid black;">Viernes</th>
+				</tr>
+			</thead>
+			<tbody>
 				
-				for ($i=0; $i < count($csv_organizado[$grupo]); $i++) { 
-					$reg = "<tr>
-							 <td>".$csv_organizado[$grupo][$i]['materia']."</td>";
+				<?php 
+					
+					for ($i=0; $i < count($csv_organizado[$grupo]); $i++) { 
+						$reg = "<tr>
+								 <td style='border: 1px solid black;'>".$csv_organizado[$grupo][$i]['materia']."</td>";
 
-							if ($csv_organizado[$grupo][$i]['l'] == "") {
-								$reg = $reg."<td></td>";
-							}else{
-								$reg = $reg."<td>".$csv_organizado[$grupo][$i]['l']."<br>".$csv_organizado[$grupo][$i]['lugar']."<br>".$csv_organizado[$grupo][$i]['profesor']."</td>";
-							}
+								if ($csv_organizado[$grupo][$i]['l'] == "") {
+									$reg = $reg."<td style='border: 1px solid black;'></td>";
+								}else{
+									$reg = $reg."<td style='border: 1px solid black;'>".$csv_organizado[$grupo][$i]['l']."<br>".$csv_organizado[$grupo][$i]['lugar']."<br>".$csv_organizado[$grupo][$i]['profesor']."</td>";
+								}
 
-							if ($csv_organizado[$grupo][$i]['ma'] == "") {
-								$reg = $reg."<td></td>";
-							}else{
-								$reg = $reg."<td>".$csv_organizado[$grupo][$i]['ma']."<br>".$csv_organizado[$grupo][$i]['lugar']."<br>".$csv_organizado[$grupo][$i]['profesor']."</td>";
-							}
+								if ($csv_organizado[$grupo][$i]['ma'] == "") {
+									$reg = $reg."<td style='border: 1px solid black;'></td>";
+								}else{
+									$reg = $reg."<td style='border: 1px solid black;'>".$csv_organizado[$grupo][$i]['ma']."<br>".$csv_organizado[$grupo][$i]['lugar']."<br>".$csv_organizado[$grupo][$i]['profesor']."</td>";
+								}
 
-							if ($csv_organizado[$grupo][$i]['mi'] == "") {
-								$reg = $reg."<td></td>";
-							}else{
-								$reg = $reg."<td>".$csv_organizado[$grupo][$i]['mi']."<br>".$csv_organizado[$grupo][$i]['lugar']."<br>".$csv_organizado[$grupo][$i]['profesor']."</td>";
-							}
+								if ($csv_organizado[$grupo][$i]['mi'] == "") {
+									$reg = $reg."<td style='border: 1px solid black;'></td>";
+								}else{
+									$reg = $reg."<td style='border: 1px solid black;'>".$csv_organizado[$grupo][$i]['mi']."<br>".$csv_organizado[$grupo][$i]['lugar']."<br>".$csv_organizado[$grupo][$i]['profesor']."</td>";
+								}
 
-							if ($csv_organizado[$grupo][$i]['j'] == "") {
-								$reg = $reg."<td></td>";
-							}else{
-								$reg = $reg."<td>".$csv_organizado[$grupo][$i]['j']."<br>".$csv_organizado[$grupo][$i]['lugar']."<br>".$csv_organizado[$grupo][$i]['profesor']."</td>";
-							}
+								if ($csv_organizado[$grupo][$i]['j'] == "") {
+									$reg = $reg."<td style='border: 1px solid black;'></td>";
+								}else{
+									$reg = $reg."<td style='border: 1px solid black;'>".$csv_organizado[$grupo][$i]['j']."<br>".$csv_organizado[$grupo][$i]['lugar']."<br>".$csv_organizado[$grupo][$i]['profesor']."</td>";
+								}
 
-							if ($csv_organizado[$grupo][$i]['v'] == "") {
-								$reg = $reg."<td></td>";
-							}else{
-								$reg = $reg."<td>".$csv_organizado[$grupo][$i]['v']."<br>".$csv_organizado[$grupo][$i]['lugar']."<br>".$csv_organizado[$grupo][$i]['profesor']."</td>";
-							}
+								if ($csv_organizado[$grupo][$i]['v'] == "") {
+									$reg = $reg."<td style='border: 1px solid black;'></td>";
+								}else{
+									$reg = $reg."<td style='border: 1px solid black;'>".$csv_organizado[$grupo][$i]['v']."<br>".$csv_organizado[$grupo][$i]['lugar']."<br>".$csv_organizado[$grupo][$i]['profesor']."</td>";
+								}
 
-							$reg = $reg." </tr>";
-						  	echo $reg;
-				}
-			?>
-			
-		</tbody>
-	</table>
+								$reg = $reg." </tr>";
+							  	echo $reg;
+					}
+				?>
+				
+			</tbody>
+		</table>
+	</div>
 
+<script src="js/jquery-1.11.2.min.js"></script>
+<script>
 
+	$(document).ready(function(){
+		var html = $('#container').html()
+		$('#txt_html').val(html)
+	});
+	
+
+	/*$(document).on('click', '#btnPrint', function(e){
+		e.preventDefault()
+
+		$.ajax({
+	        url: "resources/imprimir.php",
+	        type: "POST",
+	        data: {html: html},
+	        success: function(datos)
+	        {
+	            console.log("chido")
+	        }
+	     
+	    });
+	});*/
+</script>
 </body>
 </html>
