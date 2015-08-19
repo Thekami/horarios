@@ -1,138 +1,167 @@
 <?php  
 
 $nombre = "Horarios2014-4.csv";
-$fila = 1;
-$tabla = "<table>
-			<thead>
-				<tr>";
-$td = "";
-$th = "";
-$nombre_tabla = "";
-$array = array();
-$data = array("grupo"=>"", "materia"=>"", "horas"=>"", "profesor"=>"", "l"=>"", "ma"=>"", "mi"=>"", "j"=>"", "v"=>"", "lugar"=>"");
+$fila = 1;	
 
+$csv = array(); // array utilizado para guardar la informacion del csv organizada
+
+//declaro la estructura del array que guardara el contenido de cada fila del csv
+$contenido_fila = array("grupo"=>"", "materia"=>"", "horas"=>"", "profesor"=>"", "l"=>"", "ma"=>"", "mi"=>"", "j"=>"", "v"=>"", "lugar"=>"");
+
+//abro el archivo
 if (($gestor = fopen("/Applications/XAMPP/xamppfiles/htdocs/imagen_becarios/images/".$nombre, "r")) !== FALSE) {
     
+    //se recorre el archivo fila por fila
     while (($datos = fgetcsv($gestor, 0, ",")) !== FALSE) {
 
-    	$data = array("grupo"=>"", "materia"=>"", "horas"=>"", "profesor"=>"", "l"=>"", "ma"=>"", "mi"=>"", "j"=>"", "v"=>"", "lugar"=>"");
+    	// inicializo el contenedor de la informacion del archivo
+    	$contenido_fila = array("grupo"=>"", "materia"=>"", "horas"=>"", "profesor"=>"", "l"=>"", "ma"=>"", "mi"=>"", "j"=>"", "v"=>"", "lugar"=>"");
 
         $numero = count($datos)-2; // Numero de campos en la línea $fila
-        //echo "<p> $numero de campos en la línea $fila: <br /></p>\n";
+
         $fila++; // numero de fila leida
 
         for ($c=0; $c < $numero; $c++) {
 
-            if ($fila == 3) // HORARIOS SEMESTRE ENERO 2014 - JULIO 2014
-                $nombre_tabla = $datos[0];
-
+        	// de la fila 1 a la 4 no contienen nada importante a si que omitimos
+        	// imprimir esa informacion y solo tomamos el contenido necesario
 	    	if ($fila > 4) {
 
+	    		// relleno la variable $contenido_fila con la informacion de cada fila
 	    		switch ($c) {
 	    			
 	    			case 0:
-	    				$data["grupo"]=utf8_encode($datos[$c]);
+	    				$contenido_fila["grupo"]=utf8_encode($datos[$c]);
 	    				break;
 
 	    			case 1:
-	    				$data["materia"]=utf8_encode($datos[$c]);
+	    				$contenido_fila["materia"]=utf8_encode($datos[$c]);
 	    				break;
 
 	    			case 2:
-	    				$data["horas"]=utf8_encode($datos[$c]);
+	    				$contenido_fila["horas"]=utf8_encode($datos[$c]);
 	    				break;
 
 	    			case 3:
-	    				$data["profesor"]=utf8_encode($datos[$c]);
+	    				$contenido_fila["profesor"]=utf8_encode($datos[$c]);
 	    				break;
 
 	    			case 4:
-	    				$data["l"]=utf8_encode($datos[$c]);
+	    				$contenido_fila["l"]=utf8_encode($datos[$c]);
 	    				break;
 
 	    			case 5:
-	    				$data["ma"]=utf8_encode($datos[$c]);
+	    				$contenido_fila["ma"]=utf8_encode($datos[$c]);
 	    				break;
 
 	    			case 6:
-	    				$data["mi"]=utf8_encode($datos[$c]);
+	    				$contenido_fila["mi"]=utf8_encode($datos[$c]);
 	    				break;
 
 	    			case 7:
-	    				$data["j"]=utf8_encode($datos[$c]);
+	    				$contenido_fila["j"]=utf8_encode($datos[$c]);
 	    				break;
 	    			
 	    			case 8:
-	    				$data["v"]=utf8_encode($datos[$c]);
+	    				$contenido_fila["v"]=utf8_encode($datos[$c]);
 	    				break;
 	    			
 	    			case 9:
-	    				$data["lugar"]=utf8_encode($datos[$c]);
+	    				$contenido_fila["lugar"]=utf8_encode($datos[$c]);
 	    				break;
 
-	    		} // fin siwotch
-
-	    		//array_push($data, utf8_encode($datos[$c]));
-
-	            if ($c == ($numero-1)) {
-	                $td = $td."<td>".utf8_encode($datos[$c])."</td></tr>";
-	            }elseif($c == 0){
-	                $td = $td."<tr><td>".utf8_encode($datos[$c])."</td>";
-	            }else{
-	                $td = $td."<td>".utf8_encode($datos[$c])."</td>";
-	            }
+	    		} // fin siwitch
 
 	    	} //fin if
 
-			
-            //echo utf8_encode($datos[$c]) . "<br />\n";
-
         } //fin for
 
+        //relleno mi array solo con el contenido importante (de la fila 5 en adelante)
         if ($fila > 4)
-        	array_push($array, $data);
+        	array_push($csv, $contenido_fila);
+
+        /* EL ARRAY CSV EN ESTE MOMENTO QUEDA LLENO CON TODA LA INFORMACION QUE CONTENIA 
+           EL ARCHIVO ORIGINAL, PERO ORGANIZADA EN FORMA DE ARRAY ASOCIATIVO.
+           A CONTINUACION ORGANIZAREMOS MEJOR EL ARRAY, SE AGRUPARAN CADA GRUPO (2A, 3C, 6H, ETC..)*/
         
     }
 
+    // se cierra la lectura del archivo
     fclose($gestor);
 
 }
 
 /*echo "<pre>";
-var_dump($array);
+var_dump($csv);
 echo "<pre>";*/
 
-$final = array();
-$otro = array();
-$cont = 0;
-$flag = true;
+$grupo = array(); // array para comenzar a agrupar los registros por grado y grupo
+$csv_organizado = array(); // array contenedor de toda la informacion organizada en los subgrupos mencionados
 
-for ($i=0; $i < count($array); $i++) { 
+$cont = 0; // contador para agilizar las iteraciones en el ciclo for
+$flag = true; //bandera para salir o entrar del ciclo while
+
+for ($i=0; $i < count($csv); $i++) {  //recorro el array con el contenido del csv
 
 	while($flag){
-		if ($array[$cont]["grupo"] == $array[$cont+1]["grupo"]) {
-			array_push($final, $array[$cont]);
+		if ($csv[$cont]["grupo"] == $csv[$cont+1]["grupo"]) { // si el grupo del primer registro es igual al del segundo registro
+			array_push($grupo, $csv[$cont]); // entonces lo agrego en el grupo
+			$cont++; // aumento el contador
+		}else{ // de lo contrario, haré lo mismo...
+			array_push($grupo, $csv[$cont]);
 			$cont++;
-		}else{
-			array_push($final, $array[$cont]);
-			$cont++;
-			$flag = false;
+			$flag = false; // pero mandare la bandera a FALSE para deja de contar y salir del while
 		}
 
 	}
-	array_push($otro, $final);
-	$i = $cont;
+
+	$bandera = false;
+	for ($j=0; $j < count($grupo); $j++) {
+	
+		for ($h=$j+1; $h < count($grupo); $h++) { 
+
+		 	if ($grupo[$j]["materia"] == $grupo[$h]["materia"]) {
+
+				if ($grupo[$j]["l"] == "" && $grupo[$h]["l"] != "")
+					$grupo[$j]["l"] = $grupo[$h]["l"]; $bandera = true;
+
+				if ($grupo[$j]["ma"] == "" && $grupo[$h]["ma"] != "")
+					$grupo[$j]["ma"] = $grupo[$h]["ma"]; $bandera = true;
+
+				if ($grupo[$j]["mi"] == "" && $grupo[$h]["mi"] != "")
+					$grupo[$j]["mi"] = $grupo[$h]["mi"]; $bandera = true;
+
+				if ($grupo[$j]["j"] == "" && $grupo[$h]["j"] != "")
+					$grupo[$j]["j"] = $grupo[$h]["j"]; $bandera = true;
+
+				if ($grupo[$j]["v"] == "" && $grupo[$h]["v"] != "")
+					$grupo[$j]["v"] = $grupo[$h]["v"]; $bandera = true;
+
+			}
+			/*if ($bandera)
+				array_splice($grupo, $h, $h);*/
+
+		 } 
+	}
+
+	// agrego al array final el contenido del grupo creado en el ciclo while
+	array_push($csv_organizado, $grupo); 
+
+	$i = $cont; // a la variable $i de doy el valor del contador del ciclo while, para optimizar las iteraciones en el ciclo for
+	
+	// inizializo las variables para poder crear el siguiente grupo de informacion
 	$flag = true;
-	$final = array();
-}
+	$grupo = array();
+} // fin for
 
-echo $cont;
 
+// imprimo el array final, ya organizado
 echo "<pre>";
-var_dump($otro);
+var_dump($csv_organizado);
 echo "<pre>";
 
-$grupo = 15;
+// defino la tabla de que grupo mostraré
+$grupo = 0;
 
 ?>
 
@@ -153,7 +182,7 @@ $grupo = 15;
     }
 </style>
 <body>
-    <h3><?php echo $otro[$grupo][0]["grupo"]; ?></h3><br>
+    <h3><?php echo $csv_organizado[$grupo][0]["grupo"]; ?></h3><br>
 	
 	<table>
 		<thead>
@@ -170,38 +199,38 @@ $grupo = 15;
 			
 			<?php 
 				
-				for ($i=0; $i < count($otro[$grupo]); $i++) { 
+				for ($i=0; $i < count($csv_organizado[$grupo]); $i++) { 
 					$reg = "<tr>
-							 <td>".$otro[$grupo][$i]['materia']."</td>";
+							 <td>".$csv_organizado[$grupo][$i]['materia']."</td>";
 
-							if ($otro[$grupo][$i]['l'] == "") {
+							if ($csv_organizado[$grupo][$i]['l'] == "") {
 								$reg = $reg."<td></td>";
 							}else{
-								$reg = $reg."<td>".$otro[$grupo][$i]['l']."<br>".$otro[$grupo][$i]['lugar']."<br>".$otro[$grupo][$i]['profesor']."</td>";
+								$reg = $reg."<td>".$csv_organizado[$grupo][$i]['l']."<br>".$csv_organizado[$grupo][$i]['lugar']."<br>".$csv_organizado[$grupo][$i]['profesor']."</td>";
 							}
 
-							if ($otro[$grupo][$i]['ma'] == "") {
+							if ($csv_organizado[$grupo][$i]['ma'] == "") {
 								$reg = $reg."<td></td>";
 							}else{
-								$reg = $reg."<td>".$otro[$grupo][$i]['ma']."<br>".$otro[$grupo][$i]['lugar']."<br>".$otro[$grupo][$i]['profesor']."</td>";
+								$reg = $reg."<td>".$csv_organizado[$grupo][$i]['ma']."<br>".$csv_organizado[$grupo][$i]['lugar']."<br>".$csv_organizado[$grupo][$i]['profesor']."</td>";
 							}
 
-							if ($otro[$grupo][$i]['mi'] == "") {
+							if ($csv_organizado[$grupo][$i]['mi'] == "") {
 								$reg = $reg."<td></td>";
 							}else{
-								$reg = $reg."<td>".$otro[$grupo][$i]['mi']."<br>".$otro[$grupo][$i]['lugar']."<br>".$otro[$grupo][$i]['profesor']."</td>";
+								$reg = $reg."<td>".$csv_organizado[$grupo][$i]['mi']."<br>".$csv_organizado[$grupo][$i]['lugar']."<br>".$csv_organizado[$grupo][$i]['profesor']."</td>";
 							}
 
-							if ($otro[$grupo][$i]['j'] == "") {
+							if ($csv_organizado[$grupo][$i]['j'] == "") {
 								$reg = $reg."<td></td>";
 							}else{
-								$reg = $reg."<td>".$otro[$grupo][$i]['j']."<br>".$otro[$grupo][$i]['lugar']."<br>".$otro[$grupo][$i]['profesor']."</td>";
+								$reg = $reg."<td>".$csv_organizado[$grupo][$i]['j']."<br>".$csv_organizado[$grupo][$i]['lugar']."<br>".$csv_organizado[$grupo][$i]['profesor']."</td>";
 							}
 
-							if ($otro[$grupo][$i]['v'] == "") {
+							if ($csv_organizado[$grupo][$i]['v'] == "") {
 								$reg = $reg."<td></td>";
 							}else{
-								$reg = $reg."<td>".$otro[$grupo][$i]['v']."<br>".$otro[$grupo][$i]['lugar']."<br>".$otro[$grupo][$i]['profesor']."</td>";
+								$reg = $reg."<td>".$csv_organizado[$grupo][$i]['v']."<br>".$csv_organizado[$grupo][$i]['lugar']."<br>".$csv_organizado[$grupo][$i]['profesor']."</td>";
 							}
 
 							$reg = $reg." </tr>";
